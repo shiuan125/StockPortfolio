@@ -1,0 +1,154 @@
+@{
+    ViewData["Title"] = ViewBag.Symbol + " 走勢圖";
+    var symbol = (string)ViewBag.Symbol;
+    var purchasePrice = (decimal?)ViewBag.PurchasePrice;
+}
+
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">← 返回庫存</a>
+    <h2 class="mb-0" id="stockTitle">@symbol 走勢圖</h2>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm btn-outline-primary range-btn active" data-days="30">30天</button>
+            <button type="button" class="btn btn-sm btn-outline-primary range-btn" data-days="90">90天</button>
+            <button type="button" class="btn btn-sm btn-outline-primary range-btn" data-days="180">半年</button>
+            <button type="button" class="btn btn-sm btn-outline-primary range-btn" data-days="365">一年</button>
+        </div>
+        <span id="chartStatus" class="text-muted small"></span>
+    </div>
+    <div class="card-body">
+        <div id="loadingSpinner" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="mt-2 text-muted">載入資料中...</div>
+        </div>
+        <div id="errorMsg" class="alert alert-warning d-none"></div>
+        <canvas id="priceChart" style="display:none; max-height:420px;"></canvas>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const symbol = '@symbol';
+    const purchasePrice = @(purchasePrice.HasValue ? purchasePrice.Value.ToString() : "null");
+
+    let chart = null;
+    let allDates = [];
+    let allPrices = [];
+    let stockName = symbol;
+
+    function sliceLastDays(days) {
+        if (allDates.length === 0) return { dates: [], prices: [] };
+        const start = Math.max(0, allDates.length - days);
+        return {
+            dates: allDates.slice(start),
+            prices: allPrices.slice(start)
+        };
+    }
+
+    function renderChart(dates, prices) {
+        const canvas = document.getElementById('priceChart');
+        canvas.style.display = 'block';
+
+        const datasets = [{
+            label: '收盤價',
+            data: prices,
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13,110,253,0.08)',
+            borderWidth: 2,
+            pointRadius: dates.length > 100 ? 0 : 2,
+            pointHoverRadius: 4,
+            tension: 0.1,
+            fill: true
+        }];
+
+        if (purchasePrice !== null) {
+            datasets.push({
+                label: `購入成本 ${purchasePrice.toLocaleString()}`,
+                data: new Array(dates.length).fill(purchasePrice),
+                borderColor: '#fd7e14',
+                borderWidth: 1.5,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                fill: false
+            });
+        }
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(canvas, {
+            type: 'line',
+            data: { labels: dates, datasets },
+            options: {
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `${ctx.dataset.label}：${ctx.parsed.y.toLocaleString('zh-TW', { minimumFractionDigits: 2 })}`
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 8, maxRotation: 0 } },
+                    y: { ticks: { callback: v => v.toLocaleString('zh-TW') } }
+                }
+            }
+        });
+    }
+
+    function showRange(days) {
+        const { dates, prices } = sliceLastDays(days);
+        if (dates.length === 0) {
+            document.getElementById('chartStatus').textContent = '此範圍無資料';
+            return;
+        }
+        const actualDays = Math.min(days, allDates.length);
+        document.getElementById('chartStatus').textContent =
+            `${dates[0]} ～ ${dates[dates.length - 1]}，共 ${dates.length} 個交易日`;
+        renderChart(dates, prices);
+    }
+
+    async function loadAllData() {
+        try {
+            const resp = await fetch(`/Home/History?symbol=${encodeURIComponent(symbol)}`);
+            const data = await resp.json();
+
+            document.getElementById('loadingSpinner').style.display = 'none';
+
+            if (data.error) {
+                document.getElementById('errorMsg').textContent = '無法取得資料：' + data.error;
+                document.getElementById('errorMsg').classList.remove('d-none');
+                return;
+            }
+
+            allDates = data.dates.slice().reverse();
+            allPrices = data.prices.slice().reverse();
+            stockName = data.name;
+            document.getElementById('stockTitle').textContent = `${data.name}（${data.symbol}）走勢圖`;
+
+            showRange(30);
+
+        } catch (e) {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            document.getElementById('errorMsg').textContent = '連線錯誤：' + e.message;
+            document.getElementById('errorMsg').classList.remove('d-none');
+        }
+    }
+
+    document.querySelectorAll('.range-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            showRange(parseInt(this.dataset.days));
+        });
+    });
+
+    loadAllData();
+</script>
+}

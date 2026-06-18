@@ -1,0 +1,42 @@
+## .NET / ASP.NET Core
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+## 發佈輸出
+publish/
+**/publish/
+
+## NuGet
+*.nupkg
+*.snupkg
+**/packages/
+!**/packages/build/
+.nuget/
+
+## 敏感設定（含 API Key）
+**/appsettings.Development.json
+**/appsettings.Production.json
+**/appsettings.Staging.json
+
+## 個人持股資料
+**/App_Data/
+
+## 環境變數 / secrets
+.env
+*.env
+secrets.json
+**/secrets.json
+
+## OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+## IDE
+.idea/
+*.swp
