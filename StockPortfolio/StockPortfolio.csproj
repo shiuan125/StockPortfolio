@@ -11,4 +11,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <Target Name="Tailwind" BeforeTargets="Build">
+    <Exec Command="npm install" WorkingDirectory="$(MSBuildProjectDirectory)" />
+    <Exec Command="npx tailwindcss -i ./wwwroot/css/input.css -o ./wwwroot/css/tailwind.css --minify"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          Condition="'$(Configuration)' == 'Release'" />
+    <Exec Command="npx tailwindcss -i ./wwwroot/css/input.css -o ./wwwroot/css/tailwind.css"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          Condition="'$(Configuration)' == 'Debug'" />
+  </Target>
+
 </Project>

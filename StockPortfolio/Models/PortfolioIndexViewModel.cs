@@ -5,6 +5,18 @@ namespace StockPortfolio.Models
         public List<StockHoldingViewModel> Holdings { get; set; } = new();
         public AddStockRequest NewHolding { get; set; } = new();
 
+        public List<StockGroupViewModel> GroupedHoldings =>
+            Holdings
+                .GroupBy(h => h.Symbol)
+                .Select(g => new StockGroupViewModel
+                {
+                    Symbol = g.Key,
+                    Name = g.First().Name,
+                    Holdings = g.OrderBy(h => h.PurchaseDate).ToList()
+                })
+                .OrderBy(g => g.Symbol)
+                .ToList();
+
         public decimal TotalCost => Holdings.Sum(h => h.TotalCost);
 
         public decimal TotalCurrentValue =>

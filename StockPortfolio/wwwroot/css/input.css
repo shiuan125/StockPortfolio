@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* 台股顏色：漲紅跌綠（調亮以適應深色背景） */
+  .tw-gain { color: #f87171; font-weight: 600; }
+  .tw-loss { color: #4ade80; font-weight: 600; }
+}
+
+@layer components {
+  /* 玻璃面板 */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/15 shadow-xl;
+  }
+
+  /* 表單輸入框 */
+  .glass-input {
+    @apply block w-full bg-white/10 border border-white/20 rounded-md px-3 py-2 text-sm
+           text-white placeholder-white/40
+           focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40
+           transition-colors;
+  }
+
+  /* 走勢圖區間按鈕組 */
+  .range-btn {
+    @apply px-3 py-1.5 text-sm border border-white/25 text-white/75
+           hover:bg-white/10 focus:outline-none transition-colors;
+  }
+  .range-btn.active {
+    @apply bg-white/20 text-white border-white/40;
+  }
+
+  /* 持股群組列收合箭頭 */
+  .collapse-icon {
+    display: inline-block;
+    transition: transform 0.15s ease;
+    font-size: 0.7em;
+    vertical-align: middle;
+  }
+  tr[aria-expanded="true"] .collapse-icon {
+    transform: rotate(90deg);
+  }
+}
