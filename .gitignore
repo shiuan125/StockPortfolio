@@ -1,6 +1,9 @@
 ## Node.js
 node_modules/
 
+## 測試覆蓋率輸出
+TestResults/
+
 ## .NET / ASP.NET Core
 bin/
 obj/
