@@ -1,3 +1,27 @@
+// ── Dark / Light mode toggle ──────────────────────────────────────────────
+(function () {
+    var checkbox = document.getElementById('theme-checkbox');
+
+    function applyTheme(light) {
+        if (light) {
+            document.documentElement.classList.add('light');
+        } else {
+            document.documentElement.classList.remove('light');
+        }
+        if (checkbox) checkbox.checked = light;
+        localStorage.setItem('theme', light ? 'light' : 'dark');
+        document.dispatchEvent(new CustomEvent('themechange', { detail: { light: light } }));
+    }
+
+    // 同步 checkbox 與目前狀態（prevent-flash script 已在 <head> 設定 class）
+    if (checkbox) {
+        checkbox.checked = document.documentElement.classList.contains('light');
+        checkbox.addEventListener('change', function () {
+            applyTheme(this.checked);
+        });
+    }
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
 
     // data-confirm on <form>: 送出前顯示確認對話框

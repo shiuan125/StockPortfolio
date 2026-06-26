@@ -41,6 +41,14 @@
     let chart = null;
     let allDates = [];
     let allPrices = [];
+    let currentDays = 30;
+
+    function chartColors() {
+        const light = document.documentElement.classList.contains('light');
+        return light
+            ? { legend: 'rgba(71,85,105,0.9)',  ticks: 'rgba(100,116,139,0.8)', grid: 'rgba(148,163,184,0.15)' }
+            : { legend: 'rgba(255,255,255,0.7)', ticks: 'rgba(255,255,255,0.5)', grid: 'rgba(255,255,255,0.08)' };
+    }
 
     function sliceLastDays(days) {
         if (allDates.length === 0) return { dates: [], prices: [] };
@@ -79,6 +87,7 @@
 
         if (chart) chart.destroy();
 
+        const c = chartColors();
         chart = new Chart(canvas, {
             type: 'line',
             data: { labels: dates, datasets },
@@ -88,7 +97,7 @@
                 plugins: {
                     legend: {
                         position: 'top',
-                        labels: { color: 'rgba(255,255,255,0.7)' }
+                        labels: { color: c.legend }
                     },
                     tooltip: {
                         callbacks: {
@@ -98,12 +107,12 @@
                 },
                 scales: {
                     x: {
-                        ticks: { maxTicksLimit: 8, maxRotation: 0, color: 'rgba(255,255,255,0.5)' },
-                        grid: { color: 'rgba(255,255,255,0.08)' }
+                        ticks: { maxTicksLimit: 8, maxRotation: 0, color: c.ticks },
+                        grid: { color: c.grid }
                     },
                     y: {
-                        ticks: { callback: v => v.toLocaleString('zh-TW'), color: 'rgba(255,255,255,0.5)' },
-                        grid: { color: 'rgba(255,255,255,0.08)' }
+                        ticks: { callback: v => v.toLocaleString('zh-TW'), color: c.ticks },
+                        grid: { color: c.grid }
                     }
                 }
             }
@@ -153,8 +162,13 @@
         btn.addEventListener('click', function () {
             document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            showRange(parseInt(this.dataset.days));
+            currentDays = parseInt(this.dataset.days);
+            showRange(currentDays);
         });
+    });
+
+    document.addEventListener('themechange', function () {
+        if (allDates.length > 0) showRange(currentDays);
     });
 
     loadAllData();
